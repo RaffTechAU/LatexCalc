@@ -1,0 +1,35 @@
+name: Auto Release from Binaries
+
+on:
+  push:
+    paths:
+      - 'build/LatexCalc_*.appimage'
+      - 'build/LatexCalc_*.exe'
+    branches:
+      - main  # or whatever branch you push your builds to
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Get version from filename
+        id: get_version
+        run: |
+          FILE=$(ls build/LatexCalc_*.appimage | sort -V | tail -n1)
+          BASENAME=$(basename "$FILE")
+          VERSION=$(echo "$BASENAME" | sed -E 's/LatexCalc_([0-9.]+)\.appimage/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          files: |
+            build/LatexCalc_${{ steps.get_version.outputs.version }}.appimage
+            build/LatexCalc_${{ steps.get_version.outputs.version }}.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
