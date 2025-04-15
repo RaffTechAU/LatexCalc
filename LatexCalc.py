@@ -110,7 +110,7 @@ class LatexCalculator(QMainWindow):
         layout.addWidget(title_label)
 
         # GitHub
-        github_label = QLabel('<a href="https://github.com/RaffTechAU/LatexCalc">https://github.com/RaffTechAU/LatexCalc</a>')
+        github_label = QLabel('<a href="https://github.com/jakeraff/LatexCalc">By Jacob Raffoul, GPL-3.0 </a>')
         github_label.setStyleSheet("""
             QLabel {
                 color: #888888;

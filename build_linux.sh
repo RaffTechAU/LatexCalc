@@ -15,9 +15,8 @@ fi
 # Create build directory
 VERSION="1.0.1"
 BUILD_DIR="build"
-APP_DIR="$BUILD_DIR/LatexCalc.AppDir"
+APP_DIR="$BUILD_DIR/temp"
 echo "Creating build directory structure..."
-rm -rf "$BUILD_DIR" 2>/dev/null || true
 mkdir -p "$APP_DIR"
 
 # Create Python virtual environment
@@ -34,11 +33,11 @@ pip install pyinstaller
 
 # Create PyInstaller spec file
 echo "Creating PyInstaller spec file..."
-cat > calculator.spec << EOF
+cat > LatexCalc.spec << EOF
 # -*- mode: python ; coding: utf-8 -*-
 
 a = Analysis(
-    ['calculator.py'],
+    ['LatexCalc.py'],
     pathex=[],
     binaries=[],
     datas=[('cropped-logo.ico', '.')],
@@ -58,7 +57,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='calculator',
+    name='LatexCalc',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -76,7 +75,7 @@ EOF
 
 # Build with PyInstaller
 echo "Building with PyInstaller..."
-pyinstaller calculator.spec
+pyinstaller LatexCalc.spec --distpath "$BUILD_DIR" --workpath "$BUILD_DIR/temp"
 
 # Create the AppDir structure
 echo "Creating AppDir structure..."
@@ -90,7 +89,7 @@ mkdir -p "$APP_DIR/usr/share/icons/hicolor/256x256/apps"
 
 # Copy the PyInstaller build
 echo "Copying PyInstaller build..."
-cp dist/calculator "$APP_DIR/usr/bin/"
+cp $BUILD_DIR/LatexCalc "$APP_DIR/usr/bin/"
 
 # Convert ICO to PNG for AppImage
 echo "Converting icon to PNG format..."
@@ -107,11 +106,10 @@ cp "$APP_DIR/usr/share/icons/hicolor/256x256/apps/latexcalc.png" "$APP_DIR/latex
 echo "Creating desktop entry..."
 cat > "$APP_DIR/latexcalc.desktop" << EOF
 [Desktop Entry]
-Version=$VERSION
 Type=Application
 Name=LatexCalc
 Comment=LaTeX Calculator
-Exec=calculator
+Exec=LatexCalc
 Icon=latexcalc
 Terminal=false
 Categories=Education;Science;Math;
@@ -136,7 +134,7 @@ export QT_QPA_PLATFORM_PLUGIN_PATH="${HERE}/usr/lib/qt6/plugins"
 export RESOURCE_NAME="latexcalc"
 export XCURSOR_PATH="${HERE}/usr/share/icons:${XCURSOR_PATH:-/usr/share/icons}"
 export QT_STYLE_OVERRIDE="Fusion"
-exec "${HERE}/usr/bin/calculator" "$@"
+exec "${HERE}/usr/bin/LatexCalc" "$@"
 EOF
 chmod +x "$APP_DIR/AppRun"
 
@@ -149,11 +147,13 @@ chmod +x "$APPIMAGETOOL"
 
 # Create AppImage
 echo "Creating AppImage..."
-"$APPIMAGETOOL" "$APP_DIR" "$BUILD_DIR/LatexCalc.AppImage"
+"$APPIMAGETOOL" "$APP_DIR" "$BUILD_DIR/LatexCalc_$VERSION.AppImage"
 
 echo "Build complete! The AppImage is in the $BUILD_DIR directory."
 
 echo "Cleaning up..."
 rm -rf "$APP_DIR"
-rm -f "calculator.spec"
+rm -f "LatexCalc.spec"
 rm -rf "venv"
+rm -r "$APPIMAGETOOL"
+rm -r "$BUILD_DIR/LatexCalc"

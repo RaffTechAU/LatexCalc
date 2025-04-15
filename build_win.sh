@@ -12,11 +12,17 @@ if ! command -v wine &> /dev/null; then
     exit 1
 fi
 
+convert_version() {
+  version=$1
+  IFS='.' read -ra parts <<< "$version"
+  parts+=("0")
+  echo "(${parts[0]}, ${parts[1]}, ${parts[2]}, ${parts[3]})"
+}
+
 # Create build directory
-VERSION="(1, 0, 1, 0)"
+VERSION="1.0.1"
 BUILD_DIR="build"
 echo "Creating build directory..."
-rm -rf "$BUILD_DIR" 2>/dev/null || true
 mkdir -p "$BUILD_DIR"
 
 # Set up Wine environment
@@ -41,11 +47,11 @@ WINEPREFIX="$WINE_PREFIX" wine python -m pip install pyinstaller PyQt6 matplotli
 
 # Create PyInstaller spec file
 echo "Creating PyInstaller spec file..."
-cat > calculator.spec << EOF
+cat > LatexCalc.spec << EOF
 # -*- mode: python ; coding: utf-8 -*-
 
 a = Analysis(
-    ['calculator.py'],
+    ['LatexCalc.py'],
     pathex=[],
     binaries=[],
     datas=[('cropped-logo.ico', '.')],
@@ -65,7 +71,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='LatexCalc.exe',
+    name='LatexCalc_$VERSION.exe',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -89,8 +95,8 @@ echo "Creating version info file..."
 cat > file_version_info.txt << EOF
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=$VERSION,
-    prodvers=$VERSION,
+    filevers=$(convert_version $VERSION),
+    prodvers=$(convert_version $VERSION),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -103,14 +109,14 @@ VSVersionInfo(
       [
         StringTable(
           u'040904B0',
-          [StringStruct(u'CompanyName', u''),
+          [StringStruct(u'CompanyName', u'RaffTechAU'),
            StringStruct(u'FileDescription', u'LaTeX Calculator'),
-           StringStruct(u'FileVersion', u'1.0.0.0'),
+           StringStruct(u'FileVersion', u'$VERSION'),
            StringStruct(u'InternalName', u'LatexCalc'),
            StringStruct(u'LegalCopyright', u''),
            StringStruct(u'OriginalFilename', u'LatexCalc.exe'),
            StringStruct(u'ProductName', u'LaTeX Calculator'),
-           StringStruct(u'ProductVersion', u'1.0.0.0')])
+           StringStruct(u'ProductVersion', u'$VERSION')])
       ]
     ),
     VarFileInfo([VarStruct(u'Translation', [1033, 1200])])
@@ -120,11 +126,11 @@ EOF
 
 # Build with PyInstaller using Wine
 echo "Building with PyInstaller using Wine..."
-WINEPREFIX="$WINE_PREFIX" wine pyinstaller calculator.spec --distpath "$BUILD_DIR" --workpath "$BUILD_DIR/temp"
+WINEPREFIX="$WINE_PREFIX" wine pyinstaller LatexCalc.spec --distpath "$BUILD_DIR" --workpath "$BUILD_DIR/temp"
 
 echo "Build complete! The Windows executable is in the $BUILD_DIR directory." 
 
 echo "Cleaning up..."
 rm -f "file_version_info.txt"
-rm -f "calculator.spec"
+rm -f "LatexCalc.spec"
 rm -rf "$BUILD_DIR/temp"
