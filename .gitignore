@@ -1,0 +1,3 @@
+# Ignore large binaries
+/build/*.exe
+/build/*.AppImage
