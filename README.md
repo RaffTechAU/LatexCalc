@@ -1,7 +1,7 @@
 # LatexCalc
 ![Preview of the LatexCalc app](LatexCalcPreview.png)
 
-A calculator app written in Python that accepts LaTeX mathematical expressions, renders them in real-time, and calculates the results.\n
+A calculator app written in Python that accepts LaTeX mathematical expressions, renders them in real-time, and calculates the results.
 
 ## Features
 - Real-time LaTeX rendering using matplotlib
