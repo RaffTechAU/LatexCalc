@@ -13,7 +13,7 @@ if ! command -v convert &> /dev/null; then
 fi
 
 # Create build directory
-VERSION="1.0.1"
+VERSION="1.0.2"
 BUILD_DIR="build"
 APP_DIR="$BUILD_DIR/temp"
 echo "Creating build directory structure..."

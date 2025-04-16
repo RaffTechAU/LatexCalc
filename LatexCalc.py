@@ -14,6 +14,9 @@ matplotlib.rcParams['mathtext.default'] = 'regular'
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
+# Set version
+version = "1.0.2"
+
 # Get the directory containing the script
 if getattr(sys, 'frozen', False):
     # If the application is run as a bundle (PyInstaller)
@@ -35,7 +38,7 @@ class DarkFrame(QFrame):
 class LatexCalculator(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("LaTeX Calculator")
+        self.setWindowTitle("LatexCalc "+version)
         self.setMinimumSize(400, 400)
         self.resize(400, 400)
         self.setStyleSheet("""
@@ -372,7 +375,7 @@ if __name__ == '__main__':
     
     # Set application metadata
     app.setApplicationName("LatexCalc")
-    app.setApplicationDisplayName("LaTeX Calculator")
+    app.setApplicationDisplayName("LatexCalc "+version)
     app.setDesktopFileName("latexcalc")
     
     # Set window class name for proper icon mapping
