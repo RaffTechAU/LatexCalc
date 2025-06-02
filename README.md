@@ -8,6 +8,7 @@ A calculator app written in Python that accepts LaTeX mathematical expressions, 
 - Support for complex mathematical expressions
 - Dark mode interface
 - Instant calculation results in both numerical and boolean form
+- 100% compliance with [NESA approved feature-sets](https://www.nsw.gov.au/education-and-training/nesa/hsc/rules-and-procedures/approved-calculators)
 
 ## Installation
 The app is available for both Windows and Linux and is portable, meaning you don't need to install python or any other dependencies.
