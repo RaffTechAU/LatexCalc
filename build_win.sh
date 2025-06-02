@@ -20,7 +20,7 @@ convert_version() {
 }
 
 # Create build directory
-VERSION="1.0.2"
+VERSION="1.1.0"
 BUILD_DIR="build"
 echo "Creating build directory..."
 mkdir -p "$BUILD_DIR"

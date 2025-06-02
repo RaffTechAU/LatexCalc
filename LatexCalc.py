@@ -15,7 +15,7 @@ from matplotlib.figure import Figure
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 
 # Set version
-version = "1.0.2"
+version = "1.1.0"
 
 # Get the directory containing the script
 if getattr(sys, 'frozen', False):
@@ -148,6 +148,8 @@ class LatexCalculator(QMainWindow):
         self.input_field.setPlaceholderText("Enter LaTeX expression (e.g., \\frac{1}{2} + \\sqrt{4} = 2.5)")
         self.input_field.textChanged.connect(self.update_preview)
         input_content_layout.addWidget(self.input_field)
+        # Add shortcut for Ctrl+Enter to calculate
+        self.input_field.keyPressEvent = self.input_field_keypress_wrapper(self.input_field.keyPressEvent)
         
         input_layout.addWidget(input_content, 1)
         input_preview_layout.addWidget(input_frame, 1)
@@ -307,6 +309,24 @@ class LatexCalculator(QMainWindow):
             print(f"Preview error: {e}")
             self.preview.setText(" ")
 
+    def is_numeric_only(self, expr):
+        # Returns True if expr is a numeric value or can be evaluated to a float
+        try:
+            # Try to evaluate to a float
+            float(sympy.N(expr, 10))
+            # Check for free symbols (variables)
+            if hasattr(expr, 'free_symbols') and expr.free_symbols:
+                return False
+            # Disallow symbolic types (e.g., Eq, Derivative, Integral, etc.)
+            symbolic_types = (
+                sympy.Equality, sympy.Derivative, sympy.Integral, sympy.Sum, sympy.Product, sympy.Limit, sympy.Symbol
+            )
+            if isinstance(expr, symbolic_types):
+                return False
+            return True
+        except Exception:
+            return False
+
     # Calculate the result of the expression
     def calculate(self):
         try:
@@ -316,46 +336,44 @@ class LatexCalculator(QMainWindow):
 
             # Parse the LaTeX expression
             expr = latex2sympy(text)
-            
-            # Check if it's an equality expression (has Eq in it)
-            if isinstance(expr, sympy.Equality):
-                try:
-                    # Evaluate both sides numerically first
-                    left_side = float(sympy.N(expr.lhs, 10))
-                    right_side = float(sympy.N(expr.rhs, 10))
-                    # Compare with a small tolerance for floating point arithmetic
-                    result = abs(left_side - right_side) < 1e-10
-                    self.result.setProperty("error", False)
-                    self.result.setText(str(result))
-                    self.result.style().unpolish(self.result)
-                    self.result.style().polish(self.result)
-                except (TypeError, ValueError):
-                    self.result.setProperty("error", True)
-                    self.result.setText("Invalid Expression")
-                    self.result.style().unpolish(self.result)
-                    self.result.style().polish(self.result)
-            else:
-                # Try to evaluate numerically
-                try:
-                    # Evaluate with high precision (10 decimal places)
-                    numeric_result = float(sympy.N(expr, 10))
-                    # Format the result to remove trailing zeros
-                    result_str = f"{numeric_result:.10f}".rstrip('0').rstrip('.')
-                    self.result.setProperty("error", False)
-                    self.result.setText(result_str)
-                    self.result.style().unpolish(self.result)
-                    self.result.style().polish(self.result)
-                except (TypeError, ValueError):
-                    self.result.setProperty("error", True)
-                    self.result.setText("Invalid Expression")
-                    self.result.style().unpolish(self.result)
-                    self.result.style().polish(self.result)
+
+            # Block symbolic/CAS/graphing/financial features
+            if not self.is_numeric_only(expr):
+                self.result.setProperty("error", True)
+                self.result.setText("Invalid Expression")
+                self.result.style().unpolish(self.result)
+                self.result.style().polish(self.result)
+                return
+
+            # Try to evaluate numerically
+            try:
+                # Evaluate with high precision (10 decimal places)
+                numeric_result = float(sympy.N(expr, 10))
+                # Format the result to remove trailing zeros
+                result_str = f"{numeric_result:.10f}".rstrip('0').rstrip('.')
+                self.result.setProperty("error", False)
+                self.result.setText(result_str)
+                self.result.style().unpolish(self.result)
+                self.result.style().polish(self.result)
+            except (TypeError, ValueError):
+                self.result.setProperty("error", True)
+                self.result.setText("Invalid Expression")
+                self.result.style().unpolish(self.result)
+                self.result.style().polish(self.result)
                 
         except Exception as e:
             self.result.setProperty("error", True)
             self.result.setText("Invalid Expression")
             self.result.style().unpolish(self.result)
             self.result.style().polish(self.result)
+
+    def input_field_keypress_wrapper(self, original_keyPressEvent):
+        def new_keyPressEvent(event):
+            if (event.modifiers() & Qt.KeyboardModifier.ControlModifier) and event.key() in (Qt.Key.Key_Enter, Qt.Key.Key_Return):
+                self.calculate()
+            else:
+                original_keyPressEvent(event)
+        return new_keyPressEvent
 
     # Handle window resize events
     def resizeEvent(self, event):
